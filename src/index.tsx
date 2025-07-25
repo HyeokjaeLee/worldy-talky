@@ -1,41 +1,25 @@
-import { serve } from "bun";
 import index from "./index.html";
+import { Elysia } from 'elysia';
 
-const server = serve({
-  routes: {
-    // Serve index.html for all unmatched routes.
-    "/*": index,
 
-    "/api/hello": {
-      async GET(req) {
-        return Response.json({
-          message: "Hello, world!",
-          method: "GET",
-        });
-      },
-      async PUT(req) {
-        return Response.json({
-          message: "Hello, world!",
-          method: "PUT",
-        });
-      },
-    },
+const app = new Elysia({
 
-    "/api/hello/:name": async req => {
-      const name = req.params.name;
-      return Response.json({
-        message: `Hello, ${name}!`,
-      });
-    },
-  },
+})
+	.get('/*', index)
+  .get("/api/hello", async(req) =>{
 
-  development: process.env.NODE_ENV !== "production" && {
-    // Enable browser hot reloading in development
-    hmr: true,
+    return {
+      message: "Hello, world!",
+      method: "GET",
+    }
+  })
+  .get('/api/hello/:name', async(req) => {
+    const name = req.params.name;
+    return {
+      message: `Hello, ${name}!`,
+    }
+  })
+	.listen(3000)
 
-    // Echo console logs from the browser to the server
-    console: true,
-  },
-});
 
-console.log(`🚀 Server running at ${server.url}`);
+console.log(`🚀 Server running at ${app.server?.url}`);
