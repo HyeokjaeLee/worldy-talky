@@ -38,6 +38,7 @@ jobs:
             ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}:${{ github.sha }}
 
       - name: Deploy to EC2
+        if: success()
         uses: appleboy/ssh-action@v1.0.3
         env:
           REGISTRY: ghcr.io
