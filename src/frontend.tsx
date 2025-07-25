@@ -5,15 +5,19 @@
  * It is included in `src/index.html`.
  */
 
+import { createRouter, RouterProvider } from '@tanstack/react-router';
 import { StrictMode } from 'react';
 import { createRoot } from 'react-dom/client';
 
-import { App } from './App';
+// Import the generated route tree
+import { routeTree } from './routeTree.gen';
+
+const router = createRouter({ routeTree });
 
 const elem = document.getElementById('root')!;
 const app = (
   <StrictMode>
-    <App />
+    <RouterProvider router={router} />
   </StrictMode>
 );
 
