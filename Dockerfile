@@ -1,5 +1,5 @@
-# ARM64 플랫폼 명시
-FROM --platform=linux/arm64 oven/bun:alpine AS base
+# 플랫폼은 빌드 시에 지정
+FROM oven/bun:alpine AS base
 
 # 작업 디렉토리 설정
 WORKDIR /app

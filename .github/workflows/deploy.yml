@@ -2,9 +2,9 @@ name: Deploy to EC2
 
 on:
   push:
-    branches: [release/20250726]
+    branches: [main]
   pull_request:
-    branches: [release/20250726]
+    branches: [main]
 
 jobs:
   deploy:
