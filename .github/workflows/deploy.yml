@@ -14,6 +14,26 @@ jobs:
       - name: Checkout code
         uses: actions/checkout@v4
 
+      - name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@v3
+
+      - name: Login to GitHub Container Registry
+        uses: docker/login-action@v3
+        with:
+          registry: ghcr.io
+          username: ${{ github.actor }}
+          password: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Build and push Docker image
+        uses: docker/build-push-action@v5
+        with:
+          context: .
+          platforms: linux/arm64
+          push: true
+          tags: |
+            ghcr.io/${{ github.repository_owner }}/worldy-talky:latest
+            ghcr.io/${{ github.repository_owner }}/worldy-talky:${{ github.sha }}
+
       - name: Deploy to EC2
         uses: appleboy/ssh-action@v1.0.3
         with:
@@ -25,20 +45,11 @@ jobs:
             docker stop worldy-talky || true
             docker rm worldy-talky || true
 
-            # 프로젝트 디렉토리로 이동 (없으면 생성)
-            mkdir -p ~/worldy-talky
-            cd ~/worldy-talky
+            # GitHub Container Registry 로그인
+            echo ${{ secrets.GITHUB_TOKEN }} | docker login ghcr.io -u ${{ github.actor }} --password-stdin
 
-            # Git에서 최신 코드 받기
-            if [ -d .git ]; then
-              git fetch origin
-              git reset --hard origin/release/20250726
-            else
-              git clone https://github.com/${{ github.repository }} .
-            fi
-
-            # Docker 이미지 빌드
-            docker build --platform linux/arm64 -t worldy-talky:latest .
+            # 새 이미지 pull
+            docker pull ghcr.io/${{ github.repository_owner }}/worldy-talky:latest
 
             # 컨테이너 실행
             docker run -d \
@@ -46,7 +57,7 @@ jobs:
               --restart unless-stopped \
               -p 3000:3000 \
               -e NODE_ENV=production \
-              worldy-talky:latest
+              ghcr.io/${{ github.repository_owner }}/worldy-talky:latest
 
             # 사용하지 않는 이미지 정리
             docker image prune -f
