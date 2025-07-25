@@ -1,0 +1,52 @@
+name: Deploy to EC2
+
+on:
+  push:
+    branches: [release/20250726]
+  pull_request:
+    branches: [release/20250726]
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Deploy to EC2
+        uses: appleboy/ssh-action@v1.0.3
+        with:
+          host: ${{ secrets.EC2_HOST }}
+          username: ${{ secrets.EC2_USER }}
+          key: ${{ secrets.EC2_SSH_KEY }}
+          script: |
+            # 기존 컨테이너 중지 및 제거
+            docker stop worldy-talky || true
+            docker rm worldy-talky || true
+
+            # 프로젝트 디렉토리로 이동 (없으면 생성)
+            mkdir -p ~/worldy-talky
+            cd ~/worldy-talky
+
+            # Git에서 최신 코드 받기
+            if [ -d .git ]; then
+              git fetch origin
+              git reset --hard origin/release/20250726
+            else
+              git clone https://github.com/${{ github.repository }} .
+            fi
+
+            # Docker 이미지 빌드
+            docker build --platform linux/arm64 -t worldy-talky:latest .
+
+            # 컨테이너 실행
+            docker run -d \
+              --name worldy-talky \
+              --restart unless-stopped \
+              -p 3000:3000 \
+              -e NODE_ENV=production \
+              worldy-talky:latest
+
+            # 사용하지 않는 이미지 정리
+            docker image prune -f
