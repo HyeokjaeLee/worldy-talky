@@ -1,11 +1,10 @@
-import { APITester } from "./APITester";
-import "./index.css";
+import './index.css';
 
-import logo from "./logo.svg";
-import reactLogo from "./react.svg";
+import { APITester } from './APITester';
+import logo from './logo.svg';
+import reactLogo from './react.svg';
 
 export function App() {
-
   return (
     <div className="app">
       <div className="logo-container">
