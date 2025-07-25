@@ -26,16 +26,22 @@ jobs:
 
       - name: Build and push Docker image
         uses: docker/build-push-action@v5
+        env:
+          REGISTRY: ghcr.io
+          IMAGE_NAME: hyeokjaelee/worldy-talky
         with:
           context: .
           platforms: linux/arm64
           push: true
           tags: |
-            ghcr.io/${{ github.repository }}:latest
-            ghcr.io/${{ github.repository }}:${{ github.sha }}
+            ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}:latest
+            ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}:${{ github.sha }}
 
       - name: Deploy to EC2
         uses: appleboy/ssh-action@v1.0.3
+        env:
+          REGISTRY: ghcr.io
+          IMAGE_NAME: hyeokjaelee/worldy-talky
         with:
           host: ${{ secrets.EC2_HOST }}
           username: ${{ secrets.EC2_USER }}
@@ -46,10 +52,10 @@ jobs:
             docker rm worldy-talky || true
 
             # GitHub Container Registry 로그인
-            echo ${{ secrets.GITHUB_TOKEN }} | docker login ghcr.io -u ${{ github.actor }} --password-stdin
+            echo ${{ secrets.GITHUB_TOKEN }} | docker login ${{ env.REGISTRY }} -u ${{ github.actor }} --password-stdin
 
             # 새 이미지 pull
-            docker pull ghcr.io/${{ github.repository }}:latest
+            docker pull ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}:latest
 
             # 컨테이너 실행
             docker run -d \
@@ -57,7 +63,7 @@ jobs:
               --restart unless-stopped \
               -p 3000:3000 \
               -e NODE_ENV=production \
-              ghcr.io/${{ github.repository }}:latest
+              ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}:latest
 
             # 사용하지 않는 이미지 정리
             docker image prune -f
